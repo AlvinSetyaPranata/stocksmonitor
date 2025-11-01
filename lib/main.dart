@@ -168,47 +168,70 @@ class Stock {
   });
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Sample stock data - only bookmarked emitents
-    final List<Stock> bookmarkedStocks = [
-      Stock(
-        issuer: 'Apple Inc.', 
-        isUp: true, 
-        changePercentage: 2.5, 
-        price: 150.00, 
-        isBookmarked: true,
-        priceHistory: [
-          FlSpot(0, 145),
-          FlSpot(1, 147),
-          FlSpot(2, 149),
-          FlSpot(3, 148),
-          FlSpot(4, 150),
-          FlSpot(5, 152),
-          FlSpot(6, 150),
-        ],
-      ),
-      Stock(
-        issuer: 'Microsoft Corp.', 
-        isUp: true, 
-        changePercentage: 0.8, 
-        price: 300.00, 
-        isBookmarked: true,
-        priceHistory: [
-          FlSpot(0, 295),
-          FlSpot(1, 297),
-          FlSpot(2, 299),
-          FlSpot(3, 301),
-          FlSpot(4, 300),
-          FlSpot(5, 302),
-          FlSpot(6, 300),
-        ],
-      ),
-    ];
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  // Sample stock data - only bookmarked emitents
+  List<Stock> bookmarkedStocks = [
+    Stock(
+      issuer: 'Apple Inc.', 
+      isUp: true, 
+      changePercentage: 2.5, 
+      price: 150.00, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 145),
+        FlSpot(1, 147),
+        FlSpot(2, 149),
+        FlSpot(3, 148),
+        FlSpot(4, 150),
+        FlSpot(5, 152),
+        FlSpot(6, 150),
+      ],
+    ),
+    Stock(
+      issuer: 'Microsoft Corp.', 
+      isUp: true, 
+      changePercentage: 0.8, 
+      price: 300.00, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 295),
+        FlSpot(1, 297),
+        FlSpot(2, 299),
+        FlSpot(3, 301),
+        FlSpot(4, 300),
+        FlSpot(5, 302),
+        FlSpot(6, 300),
+      ],
+    ),
+  ];
+
+  void _updateBookmarkStatus(String issuer, bool isBookmarked) {
+    setState(() {
+      for (int i = 0; i < bookmarkedStocks.length; i++) {
+        if (bookmarkedStocks[i].issuer == issuer) {
+          bookmarkedStocks[i] = Stock(
+            issuer: bookmarkedStocks[i].issuer,
+            isUp: bookmarkedStocks[i].isUp,
+            changePercentage: bookmarkedStocks[i].changePercentage,
+            price: bookmarkedStocks[i].price,
+            isBookmarked: isBookmarked,
+            priceHistory: bookmarkedStocks[i].priceHistory,
+          );
+          break;
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -288,121 +311,154 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         itemCount: bookmarkedStocks.length,
         itemBuilder: (context, index) {
-          return StockCard(stock: bookmarkedStocks[index], onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => StockDetailScreen(stock: bookmarkedStocks[index]),
-              ),
-            );
-          });
+          return StockCard(
+            stock: bookmarkedStocks[index], 
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StockDetailScreen(
+                    stock: bookmarkedStocks[index],
+                    onBookmarkChanged: _updateBookmarkStatus,
+                  ),
+                ),
+              );
+            },
+          );
         },
       ),
     );
   }
 }
 
-class MarketsScreen extends StatelessWidget {
+class MarketsScreen extends StatefulWidget {
   const MarketsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Sample stock data - all markets
-    final List<Stock> allStocks = [
-      Stock(
-        issuer: 'Apple Inc.', 
-        isUp: true, 
-        changePercentage: 2.5, 
-        price: 150.00, 
-        isBookmarked: true,
-        priceHistory: [
-          FlSpot(0, 145),
-          FlSpot(1, 147),
-          FlSpot(2, 149),
-          FlSpot(3, 148),
-          FlSpot(4, 150),
-          FlSpot(5, 152),
-          FlSpot(6, 150),
-        ],
-      ),
-      Stock(
-        issuer: 'Google LLC', 
-        isUp: false, 
-        changePercentage: 1.2, 
-        price: 2750.00,
-        priceHistory: [
-          FlSpot(0, 2760),
-          FlSpot(1, 2755),
-          FlSpot(2, 2752),
-          FlSpot(3, 2750),
-          FlSpot(4, 2748),
-          FlSpot(5, 2745),
-          FlSpot(6, 2750),
-        ],
-      ),
-      Stock(
-        issuer: 'Microsoft Corp.', 
-        isUp: true, 
-        changePercentage: 0.8, 
-        price: 300.00, 
-        isBookmarked: true,
-        priceHistory: [
-          FlSpot(0, 295),
-          FlSpot(1, 297),
-          FlSpot(2, 299),
-          FlSpot(3, 301),
-          FlSpot(4, 300),
-          FlSpot(5, 302),
-          FlSpot(6, 300),
-        ],
-      ),
-      Stock(
-        issuer: 'Amazon.com Inc.', 
-        isUp: false, 
-        changePercentage: 3.1, 
-        price: 3200.00,
-        priceHistory: [
-          FlSpot(0, 3220),
-          FlSpot(1, 3215),
-          FlSpot(2, 3210),
-          FlSpot(3, 3205),
-          FlSpot(4, 3200),
-          FlSpot(5, 3195),
-          FlSpot(6, 3200),
-        ],
-      ),
-      Stock(
-        issuer: 'Tesla Inc.', 
-        isUp: true, 
-        changePercentage: 5.2, 
-        price: 800.00,
-        priceHistory: [
-          FlSpot(0, 780),
-          FlSpot(1, 785),
-          FlSpot(2, 790),
-          FlSpot(3, 795),
-          FlSpot(4, 800),
-          FlSpot(5, 810),
-          FlSpot(6, 800),
-        ],
-      ),
-      Stock(
-        issuer: 'Netflix Inc.', 
-        isUp: false, 
-        changePercentage: 2.7, 
-        price: 450.00,
-        priceHistory: [
-          FlSpot(0, 460),
-          FlSpot(1, 458),
-          FlSpot(2, 455),
-          FlSpot(3, 452),
-          FlSpot(4, 450),
-          FlSpot(5, 448),
-          FlSpot(6, 450),
-        ],
-      ),
-    ];
+  State<MarketsScreen> createState() => _MarketsScreenState();
+}
 
+class _MarketsScreenState extends State<MarketsScreen> {
+  // Sample stock data - all markets
+  List<Stock> allStocks = [
+    Stock(
+      issuer: 'Apple Inc.', 
+      isUp: true, 
+      changePercentage: 2.5, 
+      price: 150.00, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 145),
+        FlSpot(1, 147),
+        FlSpot(2, 149),
+        FlSpot(3, 148),
+        FlSpot(4, 150),
+        FlSpot(5, 152),
+        FlSpot(6, 150),
+      ],
+    ),
+    Stock(
+      issuer: 'Google LLC', 
+      isUp: false, 
+      changePercentage: 1.2, 
+      price: 2750.00,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 2760),
+        FlSpot(1, 2755),
+        FlSpot(2, 2752),
+        FlSpot(3, 2750),
+        FlSpot(4, 2748),
+        FlSpot(5, 2745),
+        FlSpot(6, 2750),
+      ],
+    ),
+    Stock(
+      issuer: 'Microsoft Corp.', 
+      isUp: true, 
+      changePercentage: 0.8, 
+      price: 300.00, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 295),
+        FlSpot(1, 297),
+        FlSpot(2, 299),
+        FlSpot(3, 301),
+        FlSpot(4, 300),
+        FlSpot(5, 302),
+        FlSpot(6, 300),
+      ],
+    ),
+    Stock(
+      issuer: 'Amazon.com Inc.', 
+      isUp: false, 
+      changePercentage: 3.1, 
+      price: 3200.00,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 3220),
+        FlSpot(1, 3215),
+        FlSpot(2, 3210),
+        FlSpot(3, 3205),
+        FlSpot(4, 3200),
+        FlSpot(5, 3195),
+        FlSpot(6, 3200),
+      ],
+    ),
+    Stock(
+      issuer: 'Tesla Inc.', 
+      isUp: true, 
+      changePercentage: 5.2, 
+      price: 800.00,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 780),
+        FlSpot(1, 785),
+        FlSpot(2, 790),
+        FlSpot(3, 795),
+        FlSpot(4, 800),
+        FlSpot(5, 810),
+        FlSpot(6, 800),
+      ],
+    ),
+    Stock(
+      issuer: 'Netflix Inc.', 
+      isUp: false, 
+      changePercentage: 2.7, 
+      price: 450.00,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 460),
+        FlSpot(1, 458),
+        FlSpot(2, 455),
+        FlSpot(3, 452),
+        FlSpot(4, 450),
+        FlSpot(5, 448),
+        FlSpot(6, 450),
+      ],
+    ),
+  ];
+
+  void _updateBookmarkStatus(String issuer, bool isBookmarked) {
+    setState(() {
+      for (int i = 0; i < allStocks.length; i++) {
+        if (allStocks[i].issuer == issuer) {
+          allStocks[i] = Stock(
+            issuer: allStocks[i].issuer,
+            isUp: allStocks[i].isUp,
+            changePercentage: allStocks[i].changePercentage,
+            price: allStocks[i].price,
+            isBookmarked: isBookmarked,
+            priceHistory: allStocks[i].priceHistory,
+          );
+          break;
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Markets'),
@@ -411,14 +467,20 @@ class MarketsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         itemCount: allStocks.length,
         itemBuilder: (context, index) {
-          return StockCard(stock: allStocks[index], onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => StockDetailScreen(stock: allStocks[index]),
-              ),
-            );
-          });
+          return StockCard(
+            stock: allStocks[index], 
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StockDetailScreen(
+                    stock: allStocks[index],
+                    onBookmarkChanged: _updateBookmarkStatus,
+                  ),
+                ),
+              );
+            },
+          );
         },
       ),
     );
@@ -482,20 +544,54 @@ class StockCard extends StatelessWidget {
   }
 }
 
-class StockDetailScreen extends StatelessWidget {
+class StockDetailScreen extends StatefulWidget {
   final Stock stock;
+  final Function(String, bool) onBookmarkChanged;
 
-  const StockDetailScreen({super.key, required this.stock});
+  const StockDetailScreen({
+    super.key, 
+    required this.stock,
+    required this.onBookmarkChanged,
+  });
+
+  @override
+  State<StockDetailScreen> createState() => _StockDetailScreenState();
+}
+
+class _StockDetailScreenState extends State<StockDetailScreen> {
+  late bool _isBookmarked;
+
+  @override
+  void initState() {
+    super.initState();
+    _isBookmarked = widget.stock.isBookmarked;
+  }
+
+  void _toggleBookmark() {
+    setState(() {
+      _isBookmarked = !_isBookmarked;
+    });
+    widget.onBookmarkChanged(widget.stock.issuer, _isBookmarked);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(stock.issuer),
+        title: Text(widget.stock.issuer),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: _isBookmarked ? Colors.yellow : null,
+            ),
+            onPressed: _toggleBookmark,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -508,7 +604,7 @@ class StockDetailScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '\$${stock.price.toStringAsFixed(2)}',
+                    '\$${widget.stock.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -517,13 +613,13 @@ class StockDetailScreen extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        stock.isUp ? Icons.trending_up : Icons.trending_down,
-                        color: stock.isUp ? Colors.green : Colors.red,
+                        widget.stock.isUp ? Icons.trending_up : Icons.trending_down,
+                        color: widget.stock.isUp ? Colors.green : Colors.red,
                       ),
                       Text(
-                        '${stock.changePercentage}%',
+                        '${widget.stock.changePercentage}%',
                         style: TextStyle(
-                          color: stock.isUp ? Colors.green : Colors.red,
+                          color: widget.stock.isUp ? Colors.green : Colors.red,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -549,13 +645,13 @@ class StockDetailScreen extends StatelessWidget {
                   LineChartData(
                     lineBarsData: [
                       LineChartBarData(
-                        spots: stock.priceHistory,
+                        spots: widget.stock.priceHistory,
                         isCurved: true,
-                        color: stock.isUp ? Colors.green : Colors.red,
+                        color: widget.stock.isUp ? Colors.green : Colors.red,
                         barWidth: 3,
                         belowBarData: BarAreaData(
                           show: true,
-                          color: stock.isUp 
+                          color: widget.stock.isUp 
                               ? Colors.green.withOpacity(0.3) 
                               : Colors.red.withOpacity(0.3),
                         ),
