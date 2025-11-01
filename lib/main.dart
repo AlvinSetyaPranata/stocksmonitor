@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +32,7 @@ class _MyAppState extends State<MyApp> {
       darkTheme: _buildDarkTheme(),
       themeMode: _themeMode,
       home: MainScreen(themeMode: _themeMode, onThemeToggle: _toggleTheme),
+      locale: const Locale('id', 'ID'), // Set Indonesian locale
     );
   }
 
@@ -84,64 +86,172 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Screens
-  late List<Widget> _screens;
+  // Shared stock data - Indonesian stocks (IHSG/IDX)
+  List<Stock> allStocks = [
+    Stock(
+      issuer: 'BBRI', 
+      fullName: 'PT Bank Rakyat Indonesia (Persero) Tbk',
+      isUp: true, 
+      changePercentage: 2.5, 
+      price: 5200, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 5100),
+        FlSpot(1, 5150),
+        FlSpot(2, 5180),
+        FlSpot(3, 5190),
+        FlSpot(4, 5200),
+        FlSpot(5, 5220),
+        FlSpot(6, 5200),
+      ],
+    ),
+    Stock(
+      issuer: 'BBCA', 
+      fullName: 'PT Bank Central Asia Tbk',
+      isUp: false, 
+      changePercentage: 1.2, 
+      price: 9800,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 9900),
+        FlSpot(1, 9880),
+        FlSpot(2, 9850),
+        FlSpot(3, 9830),
+        FlSpot(4, 9820),
+        FlSpot(5, 9810),
+        FlSpot(6, 9800),
+      ],
+    ),
+    Stock(
+      issuer: 'TLKM', 
+      fullName: 'PT Telekomunikasi Indonesia (Persero) Tbk',
+      isUp: true, 
+      changePercentage: 0.8, 
+      price: 4200, 
+      isBookmarked: true,
+      priceHistory: [
+        FlSpot(0, 4150),
+        FlSpot(1, 4170),
+        FlSpot(2, 4180),
+        FlSpot(3, 4190),
+        FlSpot(4, 4200),
+        FlSpot(5, 4210),
+        FlSpot(6, 4200),
+      ],
+    ),
+    Stock(
+      issuer: 'UNVR', 
+      fullName: 'PT Unilever Indonesia Tbk',
+      isUp: false, 
+      changePercentage: 3.1, 
+      price: 51000,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 52500),
+        FlSpot(1, 52200),
+        FlSpot(2, 52000),
+        FlSpot(3, 51800),
+        FlSpot(4, 51500),
+        FlSpot(5, 51200),
+        FlSpot(6, 51000),
+      ],
+    ),
+    Stock(
+      issuer: 'ASII', 
+      fullName: 'PT Astra International Tbk',
+      isUp: true, 
+      changePercentage: 5.2, 
+      price: 7800,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 7600),
+        FlSpot(1, 7650),
+        FlSpot(2, 7700),
+        FlSpot(3, 7750),
+        FlSpot(4, 7780),
+        FlSpot(5, 7820),
+        FlSpot(6, 7800),
+      ],
+    ),
+    Stock(
+      issuer: 'BMRI', 
+      fullName: 'PT Bank Mandiri (Persero) Tbk',
+      isUp: false, 
+      changePercentage: 2.7, 
+      price: 9200,
+      isBookmarked: false,
+      priceHistory: [
+        FlSpot(0, 9400),
+        FlSpot(1, 9380),
+        FlSpot(2, 9350),
+        FlSpot(3, 9320),
+        FlSpot(4, 9300),
+        FlSpot(5, 9280),
+        FlSpot(6, 9200),
+      ],
+    ),
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      const HomeScreen(), // Bookmarked emitents
-      const MarketsScreen(), // All markets
-      SettingsScreen(
-        themeMode: widget.themeMode,
-        onThemeToggle: widget.onThemeToggle,
-      ),
-    ];
-  }
-
-  @override
-  void didUpdateWidget(covariant MainScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Update screens when theme changes
-    if (oldWidget.themeMode != widget.themeMode) {
-      _screens = [
-        const HomeScreen(), // Bookmarked emitents
-        const MarketsScreen(), // All markets
-        SettingsScreen(
-          themeMode: widget.themeMode,
-          onThemeToggle: widget.onThemeToggle,
-        ),
-      ];
-    }
-  }
-
-  void _onTabTapped(int index) {
+  // Method to toggle bookmark status
+  void _toggleBookmark(String issuer) {
     setState(() {
-      _currentIndex = index;
+      for (int i = 0; i < allStocks.length; i++) {
+        if (allStocks[i].issuer == issuer) {
+          allStocks[i] = Stock(
+            issuer: allStocks[i].issuer,
+            fullName: allStocks[i].fullName,
+            isUp: allStocks[i].isUp,
+            changePercentage: allStocks[i].changePercentage,
+            price: allStocks[i].price,
+            isBookmarked: !allStocks[i].isBookmarked,
+            priceHistory: allStocks[i].priceHistory,
+          );
+          break;
+        }
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomeScreen(
+            bookmarkedStocks: allStocks.where((stock) => stock.isBookmarked).toList(),
+            onBookmarkToggle: _toggleBookmark,
+          ),
+          MarketsScreen(
+            allStocks: allStocks,
+            onBookmarkToggle: _toggleBookmark,
+          ),
+          SettingsScreen(
+            themeMode: widget.themeMode,
+            onThemeToggle: widget.onThemeToggle,
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Beranda',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
-            label: 'Markets',
+            label: 'Pasar',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'Pengaturan',
           ),
         ],
       ),
@@ -152,6 +262,7 @@ class _MainScreenState extends State<MainScreen> {
 // Sample stock data model
 class Stock {
   final String issuer;
+  final String fullName;
   final bool isUp;
   final double changePercentage;
   final double price;
@@ -160,75 +271,24 @@ class Stock {
 
   Stock({
     required this.issuer,
+    required this.fullName,
     required this.isUp,
     required this.changePercentage,
     required this.price,
-    this.isBookmarked = false,
+    required this.isBookmarked,
     required this.priceHistory,
   });
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatelessWidget {
+  final List<Stock> bookmarkedStocks;
+  final Function(String) onBookmarkToggle;
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  // Sample stock data - only bookmarked emitents
-  List<Stock> bookmarkedStocks = [
-    Stock(
-      issuer: 'Apple Inc.', 
-      isUp: true, 
-      changePercentage: 2.5, 
-      price: 150.00, 
-      isBookmarked: true,
-      priceHistory: [
-        FlSpot(0, 145),
-        FlSpot(1, 147),
-        FlSpot(2, 149),
-        FlSpot(3, 148),
-        FlSpot(4, 150),
-        FlSpot(5, 152),
-        FlSpot(6, 150),
-      ],
-    ),
-    Stock(
-      issuer: 'Microsoft Corp.', 
-      isUp: true, 
-      changePercentage: 0.8, 
-      price: 300.00, 
-      isBookmarked: true,
-      priceHistory: [
-        FlSpot(0, 295),
-        FlSpot(1, 297),
-        FlSpot(2, 299),
-        FlSpot(3, 301),
-        FlSpot(4, 300),
-        FlSpot(5, 302),
-        FlSpot(6, 300),
-      ],
-    ),
-  ];
-
-  void _updateBookmarkStatus(String issuer, bool isBookmarked) {
-    setState(() {
-      for (int i = 0; i < bookmarkedStocks.length; i++) {
-        if (bookmarkedStocks[i].issuer == issuer) {
-          bookmarkedStocks[i] = Stock(
-            issuer: bookmarkedStocks[i].issuer,
-            isUp: bookmarkedStocks[i].isUp,
-            changePercentage: bookmarkedStocks[i].changePercentage,
-            price: bookmarkedStocks[i].price,
-            isBookmarked: isBookmarked,
-            priceHistory: bookmarkedStocks[i].priceHistory,
-          );
-          break;
-        }
-      }
-    });
-  }
+  const HomeScreen({
+    super.key, 
+    required this.bookmarkedStocks,
+    required this.onBookmarkToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             ListTile(
                               leading: const Icon(Icons.account_circle),
-                              title: const Text('Account'),
+                              title: const Text('Akun'),
                               onTap: () {
                                 Navigator.pop(context);
                                 // Navigate to account screen
@@ -279,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             ListTile(
                               leading: const Icon(Icons.settings),
-                              title: const Text('Settings'),
+                              title: const Text('Pengaturan'),
                               onTap: () {
                                 Navigator.pop(context);
                                 // Navigate to settings
@@ -319,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(
                   builder: (context) => StockDetailScreen(
                     stock: bookmarkedStocks[index],
-                    onBookmarkChanged: _updateBookmarkStatus,
+                    onBookmarkToggle: onBookmarkToggle,
                   ),
                 ),
               );
@@ -331,137 +391,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class MarketsScreen extends StatefulWidget {
-  const MarketsScreen({super.key});
+class MarketsScreen extends StatelessWidget {
+  final List<Stock> allStocks;
+  final Function(String) onBookmarkToggle;
 
-  @override
-  State<MarketsScreen> createState() => _MarketsScreenState();
-}
-
-class _MarketsScreenState extends State<MarketsScreen> {
-  // Sample stock data - all markets
-  List<Stock> allStocks = [
-    Stock(
-      issuer: 'Apple Inc.', 
-      isUp: true, 
-      changePercentage: 2.5, 
-      price: 150.00, 
-      isBookmarked: true,
-      priceHistory: [
-        FlSpot(0, 145),
-        FlSpot(1, 147),
-        FlSpot(2, 149),
-        FlSpot(3, 148),
-        FlSpot(4, 150),
-        FlSpot(5, 152),
-        FlSpot(6, 150),
-      ],
-    ),
-    Stock(
-      issuer: 'Google LLC', 
-      isUp: false, 
-      changePercentage: 1.2, 
-      price: 2750.00,
-      isBookmarked: false,
-      priceHistory: [
-        FlSpot(0, 2760),
-        FlSpot(1, 2755),
-        FlSpot(2, 2752),
-        FlSpot(3, 2750),
-        FlSpot(4, 2748),
-        FlSpot(5, 2745),
-        FlSpot(6, 2750),
-      ],
-    ),
-    Stock(
-      issuer: 'Microsoft Corp.', 
-      isUp: true, 
-      changePercentage: 0.8, 
-      price: 300.00, 
-      isBookmarked: true,
-      priceHistory: [
-        FlSpot(0, 295),
-        FlSpot(1, 297),
-        FlSpot(2, 299),
-        FlSpot(3, 301),
-        FlSpot(4, 300),
-        FlSpot(5, 302),
-        FlSpot(6, 300),
-      ],
-    ),
-    Stock(
-      issuer: 'Amazon.com Inc.', 
-      isUp: false, 
-      changePercentage: 3.1, 
-      price: 3200.00,
-      isBookmarked: false,
-      priceHistory: [
-        FlSpot(0, 3220),
-        FlSpot(1, 3215),
-        FlSpot(2, 3210),
-        FlSpot(3, 3205),
-        FlSpot(4, 3200),
-        FlSpot(5, 3195),
-        FlSpot(6, 3200),
-      ],
-    ),
-    Stock(
-      issuer: 'Tesla Inc.', 
-      isUp: true, 
-      changePercentage: 5.2, 
-      price: 800.00,
-      isBookmarked: false,
-      priceHistory: [
-        FlSpot(0, 780),
-        FlSpot(1, 785),
-        FlSpot(2, 790),
-        FlSpot(3, 795),
-        FlSpot(4, 800),
-        FlSpot(5, 810),
-        FlSpot(6, 800),
-      ],
-    ),
-    Stock(
-      issuer: 'Netflix Inc.', 
-      isUp: false, 
-      changePercentage: 2.7, 
-      price: 450.00,
-      isBookmarked: false,
-      priceHistory: [
-        FlSpot(0, 460),
-        FlSpot(1, 458),
-        FlSpot(2, 455),
-        FlSpot(3, 452),
-        FlSpot(4, 450),
-        FlSpot(5, 448),
-        FlSpot(6, 450),
-      ],
-    ),
-  ];
-
-  void _updateBookmarkStatus(String issuer, bool isBookmarked) {
-    setState(() {
-      for (int i = 0; i < allStocks.length; i++) {
-        if (allStocks[i].issuer == issuer) {
-          allStocks[i] = Stock(
-            issuer: allStocks[i].issuer,
-            isUp: allStocks[i].isUp,
-            changePercentage: allStocks[i].changePercentage,
-            price: allStocks[i].price,
-            isBookmarked: isBookmarked,
-            priceHistory: allStocks[i].priceHistory,
-          );
-          break;
-        }
-      }
-    });
-  }
+  const MarketsScreen({
+    super.key, 
+    required this.allStocks,
+    required this.onBookmarkToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Markets'),
+        title: const Text('Pasar'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
@@ -475,7 +419,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 MaterialPageRoute(
                   builder: (context) => StockDetailScreen(
                     stock: allStocks[index],
-                    onBookmarkChanged: _updateBookmarkStatus,
+                    onBookmarkToggle: onBookmarkToggle,
                   ),
                 ),
               );
@@ -546,12 +490,12 @@ class StockCard extends StatelessWidget {
 
 class StockDetailScreen extends StatefulWidget {
   final Stock stock;
-  final Function(String, bool) onBookmarkChanged;
+  final Function(String) onBookmarkToggle;
 
   const StockDetailScreen({
     super.key, 
     required this.stock,
-    required this.onBookmarkChanged,
+    required this.onBookmarkToggle,
   });
 
   @override
@@ -571,7 +515,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     setState(() {
       _isBookmarked = !_isBookmarked;
     });
-    widget.onBookmarkChanged(widget.stock.issuer, _isBookmarked);
+    widget.onBookmarkToggle(widget.stock.issuer);
   }
 
   @override
@@ -604,7 +548,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '\$${widget.stock.price.toStringAsFixed(2)}',
+                    'Rp${NumberFormat('#,##0').format(widget.stock.price)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -631,7 +575,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               const SizedBox(height: 20),
               
               // Statistics section
-              const SectionTitle(title: 'Price History'),
+              const SectionTitle(title: 'Riwayat Harga'),
               const SizedBox(height: 16),
               Container(
                 height: 200,
@@ -664,7 +608,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           showTitles: true,
                           reservedSize: 30,
                           getTitlesWidget: (value, meta) {
-                            const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                            const weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                             return Text(
                               weekdays[value.toInt()],
                               style: const TextStyle(
@@ -680,7 +624,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           reservedSize: 40,
                           getTitlesWidget: (value, meta) {
                             return Text(
-                              '\$${value.toInt()}',
+                              'Rp${value.toInt()}',
                               style: const TextStyle(
                                 fontSize: 10,
                               ),
@@ -725,25 +669,17 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               const SizedBox(height: 32),
               
               // Company information section
-              const SectionTitle(title: 'Company Information'),
+              const SectionTitle(title: 'Informasi Perusahaan'),
               const SizedBox(height: 16),
-              const Text(
-                'Apple Inc. is an American multinational technology company that specializes in consumer electronics, computer software, and online services. The company was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne to develop, sell, and support personal computers.',
-                style: TextStyle(
+              Text(
+                widget.stock.fullName,
+                style: const TextStyle(
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Vision: To make the best products on earth and to leave the world better than we found it.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Mission: To bring the best user experience to its customers through its innovative hardware, software, and services.',
+                'Visi: Menjadi perusahaan terdepan dalam bidangnya di Indonesia.',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -751,7 +687,15 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'CEO: Tim Cook',
+                'Misi: Memberikan nilai terbaik kepada para pemegang saham melalui inovasi dan pelayanan yang unggul.',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'CEO: [Nama CEO Perusahaan]',
                 style: TextStyle(
                   fontSize: 16,
                 ),
@@ -759,26 +703,21 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               const SizedBox(height: 32),
               
               // Ownership section
-              const SectionTitle(title: 'Major Shareholders'),
+              const SectionTitle(title: 'Pemegang Saham Mayoritas'),
               const SizedBox(height: 16),
               const ShareholderItem(
-                name: 'The Vanguard Group, Inc.',
-                percentage: '8.0%',
+                name: 'Pemerintah Indonesia',
+                percentage: '60.0%',
               ),
               const SizedBox(height: 16),
               const ShareholderItem(
-                name: 'BlackRock, Inc.',
-                percentage: '5.5%',
+                name: 'Investor Asing',
+                percentage: '25.0%',
               ),
               const SizedBox(height: 16),
               const ShareholderItem(
-                name: 'Berkshire Hathaway Inc.',
-                percentage: '5.2%',
-              ),
-              const SizedBox(height: 16),
-              const ShareholderItem(
-                name: 'Tim Cook (CEO)',
-                percentage: '0.02%',
+                name: 'Investor Domestik',
+                percentage: '15.0%',
               ),
             ],
           ),
@@ -848,7 +787,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Pengaturan'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -856,7 +795,7 @@ class SettingsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Preferences',
+              'Preferensi',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -866,8 +805,8 @@ class SettingsScreen extends StatelessWidget {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.palette),
-                title: const Text('Theme'),
-                subtitle: const Text('Select app theme'),
+                title: const Text('Tema'),
+                subtitle: const Text('Pilih tema aplikasi'),
                 trailing: Switch(
                   value: themeMode == ThemeMode.dark,
                   onChanged: (bool value) {
@@ -880,8 +819,8 @@ class SettingsScreen extends StatelessWidget {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.notifications),
-                title: const Text('Notifications'),
-                subtitle: const Text('Manage notifications'),
+                title: const Text('Notifikasi'),
+                subtitle: const Text('Kelola notifikasi'),
                 trailing: const Icon(Icons.arrow_forward_ios),
               ),
             ),
@@ -889,8 +828,8 @@ class SettingsScreen extends StatelessWidget {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.language),
-                title: const Text('Language'),
-                subtitle: const Text('English'),
+                title: const Text('Bahasa'),
+                subtitle: const Text('Indonesia'),
                 trailing: const Icon(Icons.arrow_forward_ios),
               ),
             ),
@@ -898,8 +837,8 @@ class SettingsScreen extends StatelessWidget {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.info),
-                title: const Text('About'),
-                subtitle: const Text('App version 1.0.0'),
+                title: const Text('Tentang'),
+                subtitle: const Text('Versi aplikasi 1.0.0'),
                 trailing: const Icon(Icons.arrow_forward_ios),
               ),
             ),
