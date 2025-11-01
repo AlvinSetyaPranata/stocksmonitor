@@ -90,7 +90,8 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _screens = [
-      HomeScreen(themeMode: widget.themeMode),
+      const HomeScreen(), // Bookmarked emitents
+      const MarketsScreen(), // All markets
       SettingsScreen(
         themeMode: widget.themeMode,
         onThemeToggle: widget.onThemeToggle,
@@ -104,7 +105,8 @@ class _MainScreenState extends State<MainScreen> {
     // Update screens when theme changes
     if (oldWidget.themeMode != widget.themeMode) {
       _screens = [
-        HomeScreen(themeMode: widget.themeMode),
+        const HomeScreen(), // Bookmarked emitents
+        const MarketsScreen(), // All markets
         SettingsScreen(
           themeMode: widget.themeMode,
           onThemeToggle: widget.onThemeToggle,
@@ -133,6 +135,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Markets',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
@@ -148,28 +154,26 @@ class Stock {
   final bool isUp;
   final double changePercentage;
   final double price;
+  final bool isBookmarked;
 
   Stock({
     required this.issuer,
     required this.isUp,
     required this.changePercentage,
     required this.price,
+    this.isBookmarked = false,
   });
 }
 
 class HomeScreen extends StatelessWidget {
-  final ThemeMode themeMode;
-
-  const HomeScreen({super.key, required this.themeMode});
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Sample stock data
-    final List<Stock> stocks = [
-      Stock(issuer: 'Apple Inc.', isUp: true, changePercentage: 2.5, price: 150.00),
-      Stock(issuer: 'Google LLC', isUp: false, changePercentage: 1.2, price: 2750.00),
-      Stock(issuer: 'Microsoft Corp.', isUp: true, changePercentage: 0.8, price: 300.00),
-      Stock(issuer: 'Amazon.com Inc.', isUp: false, changePercentage: 3.1, price: 3200.00),
+    // Sample stock data - only bookmarked emitents
+    final List<Stock> bookmarkedStocks = [
+      Stock(issuer: 'Apple Inc.', isUp: true, changePercentage: 2.5, price: 150.00, isBookmarked: true),
+      Stock(issuer: 'Microsoft Corp.', isUp: true, changePercentage: 0.8, price: 300.00, isBookmarked: true),
     ];
 
     return Scaffold(
@@ -189,23 +193,57 @@ class HomeScreen extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: themeMode == ThemeMode.dark 
+                color: Theme.of(context).brightness == Brightness.dark 
                     ? Colors.white 
                     : Colors.black,
               ),
               child: IconButton(
                 icon: Icon(
                   Icons.person,
-                  color: themeMode == ThemeMode.dark 
+                  color: Theme.of(context).brightness == Brightness.dark 
                       ? Colors.black 
                       : Colors.white,
                 ),
                 onPressed: () {
-                  // Profile button action
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile button pressed'),
-                    ),
+                  // Show account options
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.account_circle),
+                              title: const Text('Account'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                // Navigate to account screen
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.settings),
+                              title: const Text('Settings'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                // Navigate to settings
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SettingsScreen(
+                                      themeMode: Theme.of(context).brightness == Brightness.dark 
+                                          ? ThemeMode.dark 
+                                          : ThemeMode.light,
+                                      onThemeToggle: (bool value) {},
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -215,9 +253,39 @@ class HomeScreen extends StatelessWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: stocks.length,
+        itemCount: bookmarkedStocks.length,
         itemBuilder: (context, index) {
-          return StockCard(stock: stocks[index], themeMode: themeMode);
+          return StockCard(stock: bookmarkedStocks[index]);
+        },
+      ),
+    );
+  }
+}
+
+class MarketsScreen extends StatelessWidget {
+  const MarketsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Sample stock data - all markets
+    final List<Stock> allStocks = [
+      Stock(issuer: 'Apple Inc.', isUp: true, changePercentage: 2.5, price: 150.00, isBookmarked: true),
+      Stock(issuer: 'Google LLC', isUp: false, changePercentage: 1.2, price: 2750.00),
+      Stock(issuer: 'Microsoft Corp.', isUp: true, changePercentage: 0.8, price: 300.00, isBookmarked: true),
+      Stock(issuer: 'Amazon.com Inc.', isUp: false, changePercentage: 3.1, price: 3200.00),
+      Stock(issuer: 'Tesla Inc.', isUp: true, changePercentage: 5.2, price: 800.00),
+      Stock(issuer: 'Netflix Inc.', isUp: false, changePercentage: 2.7, price: 450.00),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Markets'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: allStocks.length,
+        itemBuilder: (context, index) {
+          return StockCard(stock: allStocks[index]);
         },
       ),
     );
@@ -226,9 +294,8 @@ class HomeScreen extends StatelessWidget {
 
 class StockCard extends StatelessWidget {
   final Stock stock;
-  final ThemeMode themeMode;
 
-  const StockCard({super.key, required this.stock, required this.themeMode});
+  const StockCard({super.key, required this.stock});
 
   @override
   Widget build(BuildContext context) {
@@ -243,11 +310,11 @@ class StockCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Issuer name
+            // Issuer name with reduced font size
             Text(
               stock.issuer,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16, // Reduced from 18 to 16
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -257,11 +324,13 @@ class StockCard extends StatelessWidget {
                 Icon(
                   stock.isUp ? Icons.trending_up : Icons.trending_down,
                   color: stock.isUp ? Colors.green : Colors.red,
+                  size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${stock.changePercentage}%',
                   style: TextStyle(
+                    fontSize: 14, // Reduced from default
                     color: stock.isUp ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
                   ),
@@ -297,7 +366,7 @@ class SettingsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Account',
+              'Preferences',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -306,66 +375,43 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.account_balance_wallet),
-                title: const Text('Portfolio Value'),
-                subtitle: const Text('\$25,430.50'),
-                trailing: const Icon(Icons.arrow_forward_ios),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Portfolio details')),
-                  );
-                },
+                leading: const Icon(Icons.palette),
+                title: const Text('Theme'),
+                subtitle: const Text('Select app theme'),
+                trailing: Switch(
+                  value: themeMode == ThemeMode.dark,
+                  onChanged: (bool value) {
+                    onThemeToggle(value);
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Card(
               child: ListTile(
                 leading: const Icon(Icons.notifications),
-                title: const Text('Price Alerts'),
-                subtitle: const Text('3 active alerts'),
+                title: const Text('Notifications'),
+                subtitle: const Text('Manage notifications'),
                 trailing: const Icon(Icons.arrow_forward_ios),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Manage alerts')),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              'Market Settings',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.show_chart),
-                title: const Text('Market Data'),
-                subtitle: const Text('Real-time updates'),
-                trailing: Switch(
-                  value: true,
-                  onChanged: (bool value) {},
-                ),
+                leading: const Icon(Icons.language),
+                title: const Text('Language'),
+                subtitle: const Text('English'),
+                trailing: const Icon(Icons.arrow_forward_ios),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Theme',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('About'),
+                subtitle: const Text('App version 1.0.0'),
+                trailing: const Icon(Icons.arrow_forward_ios),
               ),
-            ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              title: const Text('Dark Theme'),
-              value: themeMode == ThemeMode.dark,
-              onChanged: (bool value) {
-                onThemeToggle(value);
-              },
             ),
           ],
         ),
